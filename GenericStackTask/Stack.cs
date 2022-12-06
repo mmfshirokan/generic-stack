@@ -10,39 +10,57 @@ namespace GenericStackTask
     /// <typeparam name="T">Specifies the type of elements in the stack.</typeparam>
     public class Stack<T> : IEnumerable<T>
     {
+        private T[] items;
+        private int count;
+        private int version;
+
         /// <summary>
-        /// Initializes a new instance of the stack class that is empty and has the default initial capacity.
+        /// Initializes a new instance of the <see cref="Stack{T}"/> class that is empty and has the default initial capacity.
         /// </summary>
         public Stack()
         {
-            throw new NotImplementedException();
+            this.count = 0;
+            this.version = 0;
+
+            this.items = Array.Empty<T>();
         }
 
         /// <summary>
-        /// Initializes a new instance of the stack class that is empty and has
+        /// Initializes a new instance of the <see cref="Stack{T}"/> class that is empty and has.
         /// the specified initial capacity.
         /// </summary>
         /// <param name="capacity">The initial number of elements of stack.</param>
         public Stack(int capacity)
         {
-            throw new NotImplementedException();
+            this.count = capacity;
+            this.version = 0;
+
+            this.items = new T[capacity];
         }
 
         /// <summary>
-        /// Initializes a new instance of the stack class that contains elements copied
+        /// Initializes a new instance of the <see cref="Stack{T}"/> class that contains elements copied.
         /// from the specified collection and has sufficient capacity to accommodate the
         /// number of elements copied.
         /// </summary>
         /// <param name="collection">The collection to copy elements from.</param>
         public Stack(IEnumerable<T>? collection)
         {
-            throw new NotImplementedException();
+            _ = collection is null ? throw new ArgumentNullException(nameof(collection)) : collection;
+
+            this.version = 0;
+            this.items = new T[this.count];
+
+            foreach (var item in collection)
+            {
+                this.Push(item);
+            }
         }
 
         /// <summary>
         /// Gets the number of elements contained in the stack.
         /// </summary>
-        public int Count => throw new NotImplementedException();
+        public int Count => this.count;
 
         /// <summary>
         /// Removes and returns the object at the top of the stack.
@@ -50,7 +68,16 @@ namespace GenericStackTask
         /// <returns>The object removed from the top of the stack.</returns>
         public T Pop()
         {
-            throw new NotImplementedException();
+            _ = this.items.Length == 0 ? throw new InvalidOperationException() : this.items;
+
+            T temp = this.items[this.count - 1];
+
+            this.items[this.count - 1] = default;
+
+            this.count--;
+            this.version++;
+
+            return temp;
         }
 
         /// <summary>
@@ -59,7 +86,7 @@ namespace GenericStackTask
         /// <returns>The object at the top of the stack.</returns>
         public T Peek()
         {
-            throw new NotImplementedException();
+            return this.items[this.Count - 1];
         }
 
         /// <summary>
@@ -69,7 +96,16 @@ namespace GenericStackTask
         /// The value can be null for reference types.</param>
         public void Push(T item)
         {
-            throw new NotImplementedException();
+            const int growthFactor = 2;
+            this.count++;
+            this.version++;
+
+            if (this.count > this.items.Length)
+            {
+                Array.Resize(ref this.items, this.count * growthFactor);
+            }
+
+            this.items[this.count - 1] = item;
         }
 
        /// <summary>
@@ -78,7 +114,10 @@ namespace GenericStackTask
        /// <returns>A new array containing copies of the elements of the stack.</returns>
         public T[] ToArray()
         {
-            throw new NotImplementedException();
+            T[] newArray = new T[this.Count];
+            Array.Copy(this.items, newArray, this.count);
+            Array.Reverse(newArray);
+            return newArray;
         }
 
         /// <summary>
@@ -88,7 +127,16 @@ namespace GenericStackTask
         /// <returns>Return true if item is found in the stack; otherwise, false.</returns>
         public bool Contains(T item)
         {
-            throw new NotImplementedException();
+            var comparer = EqualityComparer<T>.Default;
+            foreach (T it in this.items)
+            {
+                if (comparer.Equals(it, item))
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         /// <summary>
@@ -96,7 +144,10 @@ namespace GenericStackTask
         /// </summary>
         public void Clear()
         {
-            throw new NotImplementedException();
+            this.version = 0;
+            this.count = 0;
+
+            this.items = Array.Empty<T>();
         }
 
         /// <summary>
@@ -105,14 +156,20 @@ namespace GenericStackTask
         /// <returns>Return Enumerator object for the stack.</returns>
         public IEnumerator<T> GetEnumerator()
         {
-            throw new NotImplementedException();
+            int version = this.version;
+            for (int i = this.count - 1; i >= 0; i--)
+            {
+                yield return this.items[i];
+                _ = version == this.version ? version : throw new InvalidOperationException("Stack cannot be changed during iteration.");
+            }
         }
 
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            throw new NotImplementedException();
-        }
-        
-        //Add the necessary members to the class
+        /// <summary>
+        /// Returns an enumerator for the stack.
+        /// </summary>
+        /// <returns>Return Enumerator object for the stack.</returns>
+        IEnumerator IEnumerable.GetEnumerator() => this.GetEnumerator();
+
+        // Add the necessary members to the class
     }
 }
